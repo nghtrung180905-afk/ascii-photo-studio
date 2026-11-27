@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASCII Photo Studio — @nghtrung</title>
+  <style>
+    :root {
+      --bg: #07090f;
+      --panel: #0e121b;
+      --panel-2: #151b28;
+      --border: #252e42;
+      --text: #dce3f0;
+      --dim: #7d89a3;
+      --accent: #ffc45a;
+      --accent-2: #5eead4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #030407;
+      color: var(--text);
+      font-family: Consolas, Menlo, "DejaVu Sans Mono", "Segoe UI", monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 12px 28px;
+    }
+    header {
+      width: min(1160px, 98vw);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .brand span.tag {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border: 1px solid rgba(255, 196, 90, 0.35);
+      border-radius: 999px;
+      background: rgba(255, 196, 90, 0.08);
+    }
+    .nav-links {
+      display: flex;
+      gap: 10px;
+      font-size: 12px;
+    }
+    .nav-links a {
+      color: var(--dim);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 6px;
+      background: var(--panel);
+    }
+    .nav-links a:hover { color: var(--accent); border-color: var(--accent); }
+
+    .layout {
+      width: min(1160px, 98vw);
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    .sidebar {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .dropzone {
+      border: 1.5px dashed #3b4866;
+      border-radius: 8px;
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+      background: #0a0d14;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--accent);
+      background: rgba(255, 196, 90, 0.06);
+    }
+    .dropzone .title { font-size: 13px; color: #eef2fa; margin-bottom: 4px; font-weight: 600; }
+    .dropzone .sub { font-size: 11px; color: var(--dim); }
+    input[type="file"] { display: none; }
+
+    .group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-top: 8px;
+      border-top: 1px solid #1b2232;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+    .row label { color: #b9c4da; }
+    .row .val { color: var(--accent); font-size: 11.5px; }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    select, input[type="text"] {
+      width: 100%;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 9px;
+      font-family: inherit;
+      font-size: 12px;
+    }
+    select:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .checks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 12px;
+      color: #c7d1e6;
+    }
+    .checks label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #1b2232;
+    }
+    button {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid #2e3952;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    button:hover { border-color: var(--accent); color: var(--accent); }
+    button.primary {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      color: #0b0e14;
+      border: none;
+      font-weight: 700;
+      padding: 9px 12px;
+    }
+    button.primary:hover { filter: brightness(1.08); color: #05070b; }
+
+    .stage-wrap {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 520px;
+      padding: 10px;
+      position: relative;
+    }
+    canvas#asciiCanvas {
+      max-width: 100%;
+      max-height: 82vh;
+      width: auto;
+      height: auto;
+      display: block;
+      border-radius: 6px;
+    }
+    .meta-bar {
+      width: 100%;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #171d2b;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--dim);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span>ASCII Photo Studio</span>
+      <span class="tag">@nghtrung</span>
+    </div>
+    <div class="nav-links">
+      <a href="https://nghtrung180905-afk.github.io/ascii-christmas-tree/" target="_blank">🎄 Cây Thông Noel 3D</a>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="dropzone" id="dropzone">
+        <div class="title">📷 Chọn hoặc kéo thả ảnh vào đây</div>
+        <div class="sub">Hỗ trợ JPG, PNG, WEBP — xử lý trực tiếp trên máy bạn</div>
+        <input type="file" id="fileInput" accept="image/*" />
+      </div>
+
+      <div class="group">
+        <div class="row"><label>Độ chi tiết (Số cột)</label><span class="val" id="valCols">116</span></div>
+        <input type="range" id="slCols" min="50" max="180" step="2" value="116" />
+
+        <div class="row"><label>Độ sáng (Brightness)</label><span class="val" id="valBright">1.10</span></div>
+        <input type="range" id="slBright" min="0.5" max="2.0" step="0.05" value="1.10" />
+
+        <div class="row"><label>Tương phản (Contrast)</label><span class="val" id="valContrast">1.15</span></div>
+        <input type="range" id="slContrast" min="0.6" max="2.2" step="0.05" value="1.15" />
+
+        <div class="row"><label>Phát sáng (Neon Glow)</label><span class="val" id="valGlow">42%</span></div>
+        <input type="range" id="slGlow" min="0" max="100" step="2" value="42" />
+      </div>
+
+      <div class="group">
+        <div class="row"><label>Chế độ màu</label></div>
+        <select id="selColor">
+          <option value="truecolor">Màu gốc phát sáng (Truecolor)</option>
+          <option value="vivid">Màu rực rỡ (Vivid Neon)</option>
+          <option value="gold">Vàng ấm (Warm Gold)</option>
+          <option value="matrix">Xanh Matrix (Cyber Green)</option>
+          <option value="cyber">Tím / Hồng Cyberpunk</option>
+          <option value="mono">Trắng bạc (Monochrome)</option>
+        </select>
+
+        <div class="row" style="margin-top:4px;"><label>Bộ ký tự ASCII</label></div>
+        <select id="selRamp">
+          <option value=" .:-~=+*xv%&#W@">Chi tiết (giống cây thông)</option>
+          <option value=" .:-=+*#%@">Cổ điển sắc nét</option>
+          <option value=" .'`^&quot;,:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$">Siêu mịn (70 ký tự)</option>
+          <option value=" ░▒▓█">Khối Pixel (Blocks)</option>
+        </select>
+      </div>
+
+      <div class="group">
+        <div class="row"><label>Lời chúc bên dưới ảnh</label></div>
+        <input type="text" id="inpCaption" value="MERRY CHRISTMAS VỢ YÊN" maxlength="48" placeholder="Để trống nếu không cần..." />
+        <div class="row" style="margin-top:4px;"><label>Chữ ký góc trái</label></div>
+        <input type="text" id="inpSign" value="@nghtrung" maxlength="24" placeholder="@nghtrung" />
+      </div>
+
+      <div class="group">
+        <div class="checks">
+          <label><input type="checkbox" id="chkSparkle" checked /> Tuyết & sao lấp lánh</label>
+          <label><input type="checkbox" id="chkInvert" /> Đảo sáng (Invert)</label>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="btnDownload">⬇ Tải Ảnh PNG Nét Cao</button>
+        <button id="btnReplay">▶ Quét lại hiệu ứng</button>
+        <button id="btnCopyTxt">📋 Copy Text ASCII</button>
+      </div>
+    </aside>
+
+    <main class="stage-wrap">
+      <canvas id="asciiCanvas"></canvas>
+      <div class="meta-bar">
+        <span id="metaGrid">Grid: 116 × 72 · ~6,000 ký tự</span>
+        <span id="metaHint">Kéo thả ảnh bất kỳ từ máy hoặc điện thoại</span>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const CW = 9, CH = 14;
+    const canvas = document.getElementById("asciiCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const sampleCanvas = document.createElement("canvas");
+    const sampleCtx = sampleCanvas.getContext("2d", { willReadFrequently: true });
+
+    const crispCanvas = document.createElement("canvas");
+    const crispCtx = crispCanvas.getContext("2d");
+
+    const glowCanvas = document.createElement("canvas");
+    const glowCtx = glowCanvas.getContext("2d");
+
+    // Pre-build ASCII glyph alpha atlas (cached per char)
+    const glyphCache = new Map();
+    const glyphHelper = document.createElement("canvas");
+    glyphHelper.width = CW;
+    glyphHelper.height = CH;
+    const gCtx = glyphHelper.getContext("2d", { willReadFrequently: true });
+
+    function getGlyphAlpha(ch) {
+      let mask = glyphCache.get(ch);
+      if (mask) return mask;
+      gCtx.clearRect(0, 0, CW, CH);
+      gCtx.font = "bold 14px Consolas, Menlo, 'DejaVu Sans Mono', monospace";
+      gCtx.textAlign = "center";
+      gCtx.textBaseline = "middle";
+      gCtx.fillStyle = "#ffffff";
+      gCtx.fillText(ch, CW * 0.5, CH * 0.53);
+      const data = gCtx.getImageData(0, 0, CW, CH).data;
+      mask = new Uint8Array(CW * CH);
+      for (let i = 0; i < CW * CH; i++) mask[i] = data[i * 4 + 3];
+      glyphCache.set(ch, mask);
+      return mask;
+    }
+
+    // State
+    let sourceImage = null;
+    let gridCols = 116, gridRows = 72;
+    let imgPixels = null;
+    let frameImg = null, frameU32 = null;
+    let revealProgress = 0;
+    let lastTs = performance.now();
+    let elapsed = 0;
+
+    const snow = Array.from({ length: 70 }, () => ({
+      x: Math.random(),
+      y: Math.random(),
+      spd: 0.04 + Math.random() * 0.07,
+      ph: Math.random() * Math.PI * 2,
+      ch: Math.random() > 0.65 ? "*" : (Math.random() > 0.4 ? "+" : ".")
+    }));
+
+    const slCols = document.getElementById("slCols");
+    const slBright = document.getElementById("slBright");
+    const slContrast = document.getElementById("slContrast");
+    const slGlow = document.getElementById("slGlow");
+    const selColor = document.getElementById("selColor");
+    const selRamp = document.getElementById("selRamp");
+    const inpCaption = document.getElementById("inpCaption");
+    const inpSign = document.getElementById("inpSign");
+    const chkSparkle = document.getElementById("chkSparkle");
+    const chkInvert = document.getElementById("chkInvert");
+    const metaGrid = document.getElementById("metaGrid");
+
+    function createDemoImage() {
+      const c = document.createElement("canvas");
+      c.width = 640; c.height = 480;
+      const d = c.getContext("2d");
+      const bg = d.createLinearGradient(0, 0, 0, 480);
+      bg.addColorStop(0, "#0b1430");
+      bg.addColorStop(0.65, "#1b2048");
+      bg.addColorStop(1, "#090c18");
+      d.fillStyle = bg;
+      d.fillRect(0, 0, 640, 480);
+
+      const moon = d.createRadialGradient(480, 110, 10, 480, 110, 130);
+      moon.addColorStop(0, "#fff8d6");
+      moon.addColorStop(0.28, "#ffd266");
+      moon.addColorStop(0.6, "rgba(255,180,70,0.22)");
+      moon.addColorStop(1, "rgba(0,0,0,0)");
+      d.fillStyle = moon;
+      d.beginPath(); d.arc(480, 110, 130, 0, Math.PI * 2); d.fill();
+
+      d.save();
+      d.translate(290, 240);
+      const hg = d.createRadialGradient(-25, -35, 15, 0, 0, 155);
+      hg.addColorStop(0, "#ff99aa");
+      hg.addColorStop(0.4, "#ff2a55");
+      hg.addColorStop(0.85, "#b80d38");
+      hg.addColorStop(1, "#4a0518");
+      d.fillStyle = hg;
+      d.beginPath();
+      d.moveTo(0, 115);
+      d.bezierCurveTo(-155, 25, -165, -105, -75, -115);
+      d.bezierCurveTo(-25, -120, 0, -70, 0, -50);
+      d.bezierCurveTo(0, -70, 25, -120, 75, -115);
+      d.bezierCurveTo(165, -105, 155, 25, 0, 115);
+      d.fill();
+      d.restore();
+
+      d.fillStyle = "#165c34";
+      for (let i = 0; i < 9; i++) {
+        const x = i * 80 + 20, h = 70 + (i % 3) * 35;
+        d.beginPath();
+        d.moveTo(x, 480 - h); d.lineTo(x - 45, 480); d.lineTo(x + 45, 480);
+        d.fill();
+      }
+      return c;
+    }
+
+    function resampleSource() {
+      if (!sourceImage) return;
+      gridCols = parseInt(slCols.value, 10);
+      const srcW = sourceImage.naturalWidth || sourceImage.width;
+      const srcH = sourceImage.naturalHeight || sourceImage.height;
+      const imgAspect = srcH / Math.max(1, srcW);
+      const artRows = Math.max(24, Math.min(130, Math.round(gridCols * imgAspect * (CW / CH))));
+      const extraBottom = 5;
+      gridRows = artRows + extraBottom;
+
+      sampleCanvas.width = gridCols;
+      sampleCanvas.height = artRows;
+      sampleCtx.drawImage(sourceImage, 0, 0, gridCols, artRows);
+      imgPixels = sampleCtx.getImageData(0, 0, gridCols, artRows).data;
+
+      const W = gridCols * CW;
+      const H = gridRows * CH;
+      canvas.width = W;
+      canvas.height = H;
+      crispCanvas.width = W;
+      crispCanvas.height = H;
+      glowCanvas.width = Math.max(1, Math.floor(W / 4));
+      glowCanvas.height = Math.max(1, Math.floor(H / 4));
+
+      frameImg = crispCtx.createImageData(W, H);
+      frameU32 = new Uint32Array(frameImg.data.buffer);
+      metaGrid.textContent = `Grid: ${gridCols} × ${artRows} · ${(gridCols * artRows).toLocaleString()} ô ký tự · ${W}×${H}px`;
+    }
+
+    function applyColorMode(r, g, b, lum, mode) {
+      if (mode === "truecolor") return [r, g, b];
+      if (mode === "vivid") {
+        const avg = (r + g + b) / 3;
+        return [
+          Math.min(255, Math.max(0, avg + (r - avg) * 1.48)),
+          Math.min(255, Math.max(0, avg + (g - avg) * 1.48)),
+          Math.min(255, Math.max(0, avg + (b - avg) * 1.48))
+        ];
+      }
+      if (mode === "gold") {
+        return [Math.min(255, lum * 285), Math.min(255, lum * 215), Math.min(255, lum * 95)];
+      }
+      if (mode === "matrix") {
+        return [Math.min(255, lum * 70), Math.min(255, lum * 265), Math.min(255, lum * 125)];
+      }
+      if (mode === "cyber") {
+        return [
+          Math.min(255, 65 + lum * 210),
+          Math.min(255, 30 + lum * 135),
+          Math.min(255, 110 + lum * 170)
+        ];
+      }
+      const v = Math.min(255, lum * 255);
+      return [v * 0.92, v * 0.96, v];
+    }
+
+    function buildRawAsciiText() {
+      if (!imgPixels) return "";
+      const artRows = sampleCanvas.height;
+      const ramp = selRamp.value;
+      const bright = parseFloat(slBright.value);
+      const contrast = parseFloat(slContrast.value);
+      const inv = chkInvert.checked;
+      let out = "";
+      for (let y = 0; y < artRows; y++) {
+        for (let x = 0; x < gridCols; x++) {
+          const i = (y * gridCols + x) * 4;
+          let r = imgPixels[i] / 255, g = imgPixels[i + 1] / 255, b = imgPixels[i + 2] / 255;
+          let lum = 0.299 * r + 0.587 * g + 0.114 * b;
+          lum = ((lum - 0.5) * contrast + 0.5) * bright;
+          if (inv) lum = 1 - lum;
+          lum = Math.max(0, Math.min(1, lum));
+          const idx = Math.min(ramp.length - 1, Math.floor(lum * (ramp.length - 1)));
+          out += ramp[idx];
+        }
+        out += "\n";
+      }
+      return out;
+    }
+
+    function render(now) {
+      const dt = Math.min(0.05, (now - lastTs) / 1000);
+      lastTs = now;
+      elapsed += dt;
+      if (revealProgress < 1.0) {
+        revealProgress = Math.min(1.0, revealProgress + dt * 0.58);
+      }
+
+      if (imgPixels && frameU32) {
+        const W = crispCanvas.width;
+        const H = crispCanvas.height;
+        const artRows = sampleCanvas.height;
+        const ramp = selRamp.value;
+        const rampLen = ramp.length;
+        const bright = parseFloat(slBright.value);
+        const contrast = parseFloat(slContrast.value);
+        const glowAmt = parseInt(slGlow.value, 10) / 100;
+        const mode = selColor.value;
+        const inv = chkInvert.checked;
+        const scanRow = revealProgress * (artRows + 4);
+
+        frameU32.fill(0xFF0F0907);
+
+        for (let r = 0; r < artRows; r++) {
+          if (r > scanRow) continue;
+          const scanDist = scanRow - r;
+          const scanFlash = (revealProgress < 0.999 && scanDist < 3.5) ? Math.pow(1 - scanDist / 3.5, 1.8) : 0;
+          const yBase = r * CH;
+
+          for (let c = 0; c < gridCols; c++) {
+            const pIdx = (r * gridCols + c) * 4;
+            let pr = imgPixels[pIdx];
+            let pg = imgPixels[pIdx + 1];
+            let pb = imgPixels[pIdx + 2];
+
+            pr = ((pr / 255 - 0.5) * contrast + 0.5) * bright;
+            pg = ((pg / 255 - 0.5) * contrast + 0.5) * bright;
+            pb = ((pb / 255 - 0.5) * contrast + 0.5) * bright;
+            if (inv) { pr = 1 - pr; pg = 1 - pg; pb = 1 - pb; }
+            pr = pr < 0 ? 0 : pr > 1 ? 1 : pr;
+            pg = pg < 0 ? 0 : pg > 1 ? 1 : pg;
+            pb = pb < 0 ? 0 : pb > 1 ? 1 : pb;
+
+            const lum = 0.299 * pr + 0.587 * pg + 0.114 * pb;
+            if (lum < 0.035 && scanFlash < 0.1) continue;
+
+            const chIdx = Math.min(rampLen - 1, Math.max(0, Math.floor(lum * (rampLen - 1))));
+            const ch = scanFlash > 0.45 ? "#" : ramp[chIdx];
+            if (ch === " ") continue;
+
+            let [rr, gg, bb] = applyColorMode(pr * 255, pg * 255, pb * 255, lum, mode);
+            if (scanFlash > 0) {
+              rr = rr * (1 - scanFlash) + 255 * scanFlash;
+              gg = gg * (1 - scanFlash) + 255 * scanFlash;
+              bb = bb * (1 - scanFlash) + 255 * scanFlash;
+            }
+            if (chkSparkle.checked && lum > 0.72) {
+              const tw = 0.92 + 0.12 * Math.sin(elapsed * 4.5 + r * 0.7 + c * 0.4);
+              rr = Math.min(255, rr * tw);
+              gg = Math.min(255, gg * tw);
+              bb = Math.min(255, bb * tw);
+            }
+
+            const ri = rr | 0, gi = gg | 0, bi = bb | 0;
+            const mask = getGlyphAlpha(ch);
+            const xBase = c * CW;
+            for (let gy = 0; gy < CH; gy++) {
+              const dstRow = (yBase + gy) * W + xBase;
+              const srcRow = gy * CW;
+              for (let gx = 0; gx < CW; gx++) {
+                const a = mask[srcRow + gx];
+                if (a > 12) {
+                  const invA = 255 - a;
+                  const fr = (ri * a + 7 * invA) >> 8;
+                  const fg = (gi * a + 9 * invA) >> 8;
+                  const fb = (bi * a + 15 * invA) >> 8;
+                  frameU32[dstRow + gx] = (255 << 24) | (fb << 16) | (fg << 8) | fr;
+                }
+              }
+            }
+          }
+        }
+
+        if (chkSparkle.checked) {
+          for (let i = 0; i < snow.length; i++) {
+            const s = snow[i];
+            const sy = Math.floor(((s.y + elapsed * s.spd) % 1) * artRows);
+            const sx = Math.floor((((s.x + Math.sin(elapsed * 1.1 + s.ph) * 0.02) % 1) + 1) % 1 * gridCols);
+            const mask = getGlyphAlpha(s.ch);
+            const yBase = sy * CH, xBase = sx * CW;
+            for (let gy = 0; gy < CH; gy++) {
+              const dstRow = (yBase + gy) * W + xBase;
+              const srcRow = gy * CW;
+              for (let gx = 0; gx < CW; gx++) {
+                const a = mask[srcRow + gx];
+                if (a > 24) {
+                  frameU32[dstRow + gx] = (255 << 24) | (250 << 16) | (235 << 8) | 220;
+                }
+              }
+            }
+          }
+        }
+
+        crispCtx.putImageData(frameImg, 0, 0);
+
+        const rawCap = inpCaption.value.trim().toUpperCase();
+        if (rawCap && revealProgress > 0.35) {
+          const spaced = Array.from(rawCap).join(" ");
+          const chars = Array.from(spaced);
+          const shown = Math.min(chars.length, Math.floor((revealProgress - 0.35) / 0.65 * chars.length * 1.4));
+          const pal = [[250, 58, 64], [255, 206, 76], [46, 204, 102]];
+          const yPx = (artRows + 2.2) * CH;
+          const xStart = (W - chars.length * CW) * 0.5;
+          crispCtx.font = "bold 14px Consolas, Menlo, 'Segoe UI', monospace";
+          crispCtx.textAlign = "center";
+          crispCtx.textBaseline = "middle";
+          for (let i = 0; i < shown; i++) {
+            const ch = chars[i];
+            if (ch !== " ") {
+              const col = pal[(Math.floor(i / 2) + Math.floor(elapsed * 1.5)) % 3];
+              const pulse = 0.88 + 0.16 * Math.sin(elapsed * 5 + i);
+              crispCtx.fillStyle = `rgb(${Math.min(255, (col[0] * pulse) | 0)},${Math.min(255, (col[1] * pulse) | 0)},${Math.min(255, (col[2] * pulse) | 0)})`;
+              crispCtx.fillText(ch, xStart + i * CW + CW * 0.5, yPx);
+            }
+          }
+        }
+
+        const sign = inpSign.value.trim();
+        if (sign) {
+          crispCtx.font = "13px Consolas, Menlo, monospace";
+          crispCtx.textAlign = "left";
+          crispCtx.textBaseline = "bottom";
+          crispCtx.fillStyle = "rgb(184, 176, 206)";
+          crispCtx.fillText(sign, 14, H - 10);
+        }
+
+        ctx.globalCompositeOperation = "source-over";
+        ctx.drawImage(crispCanvas, 0, 0);
+
+        if (glowAmt > 0.01) {
+          glowCtx.clearRect(0, 0, glowCanvas.width, glowCanvas.height);
+          glowCtx.drawImage(crispCanvas, 0, 0, glowCanvas.width, glowCanvas.height);
+          ctx.save();
+          ctx.globalCompositeOperation = "lighter";
+          ctx.filter = "blur(6px)";
+          ctx.globalAlpha = glowAmt * 0.85;
+          ctx.drawImage(glowCanvas, 0, 0, W, H);
+          ctx.restore();
+        }
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    function loadFile(file) {
+      if (!file || !file.type.startsWith("image/")) return;
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        sourceImage = img;
+        resampleSource();
+        revealProgress = 0.0;
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    }
+
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("fileInput");
+    dropzone.onclick = () => fileInput.click();
+    fileInput.onchange = (e) => loadFile(e.target.files[0]);
+    dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add("dragover"); };
+    dropzone.ondragleave = () => dropzone.classList.remove("dragover");
+    dropzone.ondrop = (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("dragover");
+      loadFile(e.dataTransfer.files[0]);
+    };
+
+    slCols.oninput = () => { document.getElementById("valCols").textContent = slCols.value; resampleSource(); };
+    slBright.oninput = () => { document.getElementById("valBright").textContent = parseFloat(slBright.value).toFixed(2); };
+    slContrast.oninput = () => { document.getElementById("valContrast").textContent = parseFloat(slContrast.value).toFixed(2); };
+    slGlow.oninput = () => { document.getElementById("valGlow").textContent = slGlow.value + "%"; };
+
+    document.getElementById("btnReplay").onclick = () => { revealProgress = 0.0; };
+    document.getElementById("btnDownload").onclick = () => {
+      const a = document.createElement("a");
+      a.download = `ascii_photo_${Date.now()}.png`;
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+    };
+    document.getElementById("btnCopyTxt").onclick = async () => {
+      const btn = document.getElementById("btnCopyTxt");
+      try {
+        await navigator.clipboard.writeText(buildRawAsciiText());
+        btn.textContent = "✅ Đã Copy ASCII!";
+        setTimeout(() => { btn.textContent = "📋 Copy Text ASCII"; }, 1800);
+      } catch {
+        btn.textContent = "Không copy được";
+        setTimeout(() => { btn.textContent = "📋 Copy Text ASCII"; }, 1800);
+      }
+    };
+
+    sourceImage = createDemoImage();
+    resampleSource();
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>
