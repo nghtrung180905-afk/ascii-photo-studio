@@ -220,9 +220,6 @@
       <span>ASCII Photo Studio</span>
       <span class="tag">@nghtrung</span>
     </div>
-    <div class="nav-links">
-      <a href="https://nghtrung180905-afk.github.io/ascii-christmas-tree/" target="_blank">🎄 Cây Thông Noel 3D</a>
-    </div>
   </header>
 
   <div class="layout">
@@ -260,25 +257,27 @@
 
         <div class="row" style="margin-top:4px;"><label>Bộ ký tự ASCII</label></div>
         <select id="selRamp">
-          <option value=" .:-~=+*xv%&#W@">Chi tiết (giống cây thông)</option>
-          <option value=" .:-=+*#%@">Cổ điển sắc nét</option>
+          <option value=" .:-~=+*xv%&#W@">Chi tiết (Standard)</option>
+          <option value=" .:-=+*#%@">Cổ điển sắc nét (Classic)</option>
           <option value=" .'`^&quot;,:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$">Siêu mịn (70 ký tự)</option>
           <option value=" ░▒▓█">Khối Pixel (Blocks)</option>
+          <option value=" .·°oO0@●">Chấm tròn (Dots & Circles)</option>
+          <option value=" .01">Nhị phân (Binary 0/1)</option>
+          <option value=" .1234567890#">Ma trận số (Numbers)</option>
+          <option value=" ·-+×÷=≡◈◆■">Hình học (Geometric)</option>
+          <option value=" .:;+=xX$&amp;WM">Chữ cái đậm (Bold Letters)</option>
+          <option value=" .,-~;/|\=+*#">Nét vẽ tay (Sketch Lines)</option>
+          <option value=" ⠁⠃⠇⠏⠟⠿⡿⣿">Chấm Braille (Braille)</option>
+          <option value=" .·+*✦✧♥❤">Sao &amp; Trái tim (Stars &amp; Hearts)</option>
+          <option value=" .:+@">Tối giản (Minimal)</option>
         </select>
       </div>
 
       <div class="group">
         <div class="row"><label>Lời chúc bên dưới ảnh</label></div>
-        <input type="text" id="inpCaption" value="MERRY CHRISTMAS VỢ YÊN" maxlength="48" placeholder="Để trống nếu không cần..." />
+        <input type="text" id="inpCaption" value="" maxlength="48" placeholder="Nhập lời chúc nếu muốn..." />
         <div class="row" style="margin-top:4px;"><label>Chữ ký góc trái</label></div>
-        <input type="text" id="inpSign" value="@nghtrung" maxlength="24" placeholder="@nghtrung" />
-      </div>
-
-      <div class="group">
-        <div class="checks">
-          <label><input type="checkbox" id="chkSparkle" checked /> Tuyết & sao lấp lánh</label>
-          <label><input type="checkbox" id="chkInvert" /> Đảo sáng (Invert)</label>
-        </div>
+        <input type="text" id="inpSign" value="" maxlength="24" placeholder="Nhập chữ ký nếu muốn..." />
       </div>
 
       <div class="actions">
@@ -343,24 +342,9 @@
     let lastTs = performance.now();
     let elapsed = 0;
 
-    const snow = Array.from({ length: 70 }, () => ({
-      x: Math.random(),
-      y: Math.random(),
-      spd: 0.04 + Math.random() * 0.07,
-      ph: Math.random() * Math.PI * 2,
-      ch: Math.random() > 0.65 ? "*" : (Math.random() > 0.4 ? "+" : ".")
-    }));
-
-    const slCols = document.getElementById("slCols");
-    const slBright = document.getElementById("slBright");
-    const slContrast = document.getElementById("slContrast");
-    const slGlow = document.getElementById("slGlow");
-    const selColor = document.getElementById("selColor");
     const selRamp = document.getElementById("selRamp");
     const inpCaption = document.getElementById("inpCaption");
     const inpSign = document.getElementById("inpSign");
-    const chkSparkle = document.getElementById("chkSparkle");
-    const chkInvert = document.getElementById("chkInvert");
     const metaGrid = document.getElementById("metaGrid");
 
     function createDemoImage() {
@@ -416,7 +400,8 @@
       const srcH = sourceImage.naturalHeight || sourceImage.height;
       const imgAspect = srcH / Math.max(1, srcW);
       const artRows = Math.max(24, Math.min(130, Math.round(gridCols * imgAspect * (CW / CH))));
-      const extraBottom = 5;
+      const hasFooter = inpCaption.value.trim().length > 0 || inpSign.value.trim().length > 0;
+      const extraBottom = hasFooter ? 5 : 0;
       gridRows = artRows + extraBottom;
 
       sampleCanvas.width = gridCols;
@@ -468,10 +453,9 @@
     function buildRawAsciiText() {
       if (!imgPixels) return "";
       const artRows = sampleCanvas.height;
-      const ramp = selRamp.value;
+      const ramp = Array.from(selRamp.value);
       const bright = parseFloat(slBright.value);
       const contrast = parseFloat(slContrast.value);
-      const inv = chkInvert.checked;
       let out = "";
       for (let y = 0; y < artRows; y++) {
         for (let x = 0; x < gridCols; x++) {
@@ -479,7 +463,6 @@
           let r = imgPixels[i] / 255, g = imgPixels[i + 1] / 255, b = imgPixels[i + 2] / 255;
           let lum = 0.299 * r + 0.587 * g + 0.114 * b;
           lum = ((lum - 0.5) * contrast + 0.5) * bright;
-          if (inv) lum = 1 - lum;
           lum = Math.max(0, Math.min(1, lum));
           const idx = Math.min(ramp.length - 1, Math.floor(lum * (ramp.length - 1)));
           out += ramp[idx];
@@ -501,13 +484,12 @@
         const W = crispCanvas.width;
         const H = crispCanvas.height;
         const artRows = sampleCanvas.height;
-        const ramp = selRamp.value;
+        const ramp = Array.from(selRamp.value);
         const rampLen = ramp.length;
         const bright = parseFloat(slBright.value);
         const contrast = parseFloat(slContrast.value);
         const glowAmt = parseInt(slGlow.value, 10) / 100;
         const mode = selColor.value;
-        const inv = chkInvert.checked;
         const scanRow = revealProgress * (artRows + 4);
 
         frameU32.fill(0xFF0F0907);
@@ -527,7 +509,6 @@
             pr = ((pr / 255 - 0.5) * contrast + 0.5) * bright;
             pg = ((pg / 255 - 0.5) * contrast + 0.5) * bright;
             pb = ((pb / 255 - 0.5) * contrast + 0.5) * bright;
-            if (inv) { pr = 1 - pr; pg = 1 - pg; pb = 1 - pb; }
             pr = pr < 0 ? 0 : pr > 1 ? 1 : pr;
             pg = pg < 0 ? 0 : pg > 1 ? 1 : pg;
             pb = pb < 0 ? 0 : pb > 1 ? 1 : pb;
@@ -545,12 +526,6 @@
               gg = gg * (1 - scanFlash) + 255 * scanFlash;
               bb = bb * (1 - scanFlash) + 255 * scanFlash;
             }
-            if (chkSparkle.checked && lum > 0.72) {
-              const tw = 0.92 + 0.12 * Math.sin(elapsed * 4.5 + r * 0.7 + c * 0.4);
-              rr = Math.min(255, rr * tw);
-              gg = Math.min(255, gg * tw);
-              bb = Math.min(255, bb * tw);
-            }
 
             const ri = rr | 0, gi = gg | 0, bi = bb | 0;
             const mask = getGlyphAlpha(ch);
@@ -566,26 +541,6 @@
                   const fg = (gi * a + 9 * invA) >> 8;
                   const fb = (bi * a + 15 * invA) >> 8;
                   frameU32[dstRow + gx] = (255 << 24) | (fb << 16) | (fg << 8) | fr;
-                }
-              }
-            }
-          }
-        }
-
-        if (chkSparkle.checked) {
-          for (let i = 0; i < snow.length; i++) {
-            const s = snow[i];
-            const sy = Math.floor(((s.y + elapsed * s.spd) % 1) * artRows);
-            const sx = Math.floor((((s.x + Math.sin(elapsed * 1.1 + s.ph) * 0.02) % 1) + 1) % 1 * gridCols);
-            const mask = getGlyphAlpha(s.ch);
-            const yBase = sy * CH, xBase = sx * CW;
-            for (let gy = 0; gy < CH; gy++) {
-              const dstRow = (yBase + gy) * W + xBase;
-              const srcRow = gy * CW;
-              for (let gx = 0; gx < CW; gx++) {
-                const a = mask[srcRow + gx];
-                if (a > 24) {
-                  frameU32[dstRow + gx] = (255 << 24) | (250 << 16) | (235 << 8) | 220;
                 }
               }
             }
@@ -672,6 +627,16 @@
     slBright.oninput = () => { document.getElementById("valBright").textContent = parseFloat(slBright.value).toFixed(2); };
     slContrast.oninput = () => { document.getElementById("valContrast").textContent = parseFloat(slContrast.value).toFixed(2); };
     slGlow.oninput = () => { document.getElementById("valGlow").textContent = slGlow.value + "%"; };
+    let lastHadFooter = false;
+    function syncFooterRows() {
+      const hasFooter = inpCaption.value.trim().length > 0 || inpSign.value.trim().length > 0;
+      if (hasFooter !== lastHadFooter) {
+        lastHadFooter = hasFooter;
+        resampleSource();
+      }
+    }
+    inpCaption.addEventListener("input", syncFooterRows);
+    inpSign.addEventListener("input", syncFooterRows);
 
     document.getElementById("btnReplay").onclick = () => { revealProgress = 0.0; };
     document.getElementById("btnDownload").onclick = () => {
